@@ -61,9 +61,11 @@ app.post("/register/finish",(req,res)=>{
   const cleanNick=String(nickname||"").trim().replace(/^@/,"");
   if(!/^[A-Za-z0-9_]{3,24}$/.test(cleanNick)) return res.status(400).send("Неверный псевдоним.");
   if([...users.values()].some(u=>u.nickname.toLowerCase()===cleanNick.toLowerCase())) return res.status(400).send("Этот псевдоним уже занят.");
-  const user={id:crypto.randomUUID(),name:String(name).trim(),nickname:cleanNick,telegramChatId:s.chatId,createdAt:new Date().toISOString()};
+  const cleanName=String(name||"").trim();
+  if(!cleanName) return res.status(400).send("Введите имя.");
+  const user={id:crypto.randomUUID(),name:cleanName,nickname:cleanNick,telegramChatId:s.chatId,createdAt:new Date().toISOString()};
   users.set(user.id,user); sessions.delete(token);
-  res.send("<h1>Регистрация завершена!</h1><p>Добро пожаловать, @"+user.nickname+"</p><a href="/">На главную</a>");
+  res.send(`<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Готово — ARTICLES</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at top,#1b2040 0,#08090d 48%,#05060a 100%);color:#fff;font-family:Inter,system-ui,-apple-system,sans-serif}.card{width:min(520px,100%);padding:42px 34px;text-align:center;border:1px solid #ffffff18;border-radius:30px;background:#ffffff0b;backdrop-filter:blur(20px);box-shadow:0 25px 80px #0008}.icon{width:72px;height:72px;margin:0 auto 20px;border-radius:22px;display:grid;place-items:center;background:#6475ff;color:#fff;font-size:34px;font-weight:900}.muted{color:#aeb5c7}.nick{font-size:24px;font-weight:800;margin:12px 0 28px}.btn{display:inline-block;padding:13px 20px;border-radius:14px;background:#6475ff;color:#fff;text-decoration:none;font-weight:800}</style></head><body><main class="card"><div class="icon">✓</div><h1>Регистрация завершена</h1><p class="muted">Добро пожаловать в ARTICLES 2026</p><div class="nick">@${user.nickname}</div><a class="btn" href="/">Перейти на главную</a></main></body></html>`);
 });
 
 app.listen(PORT,async()=>{console.log("ARTICLES server listening on "+PORT);if(BOT_TOKEN&&process.env.PUBLIC_URL){try{await fetch("https://api.telegram.org/bot"+BOT_TOKEN+"/setWebhook",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:process.env.PUBLIC_URL+"/api/telegram/webhook"})});console.log("Telegram webhook configured");}catch(e){console.error("Webhook setup failed",e.message)}}});
