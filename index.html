@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Современная платформа статей — идеи, технологии, наука и культура.">
+<title>ARTICLES — статьи 2026</title>
+<style>
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#f5f7fb;background:#08090d;min-height:100vh}
+body:before{content:"";position:fixed;inset:-30%;z-index:-2;background:radial-gradient(circle at 15% 10%,#3145ff33,transparent 28%),radial-gradient(circle at 85% 20%,#9b5cff2b,transparent 25%),radial-gradient(circle at 50% 100%,#00c8ff18,transparent 30%)}
+body:after{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,#ffffff03,#00000022)}
+.container{width:min(1180px,calc(100% - 32px));margin:auto}.glass{background:#ffffff0b;border:1px solid #ffffff14;box-shadow:0 20px 70px #00000035;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+header{position:sticky;top:0;z-index:20;background:#08090dcc;border-bottom:1px solid #ffffff10;backdrop-filter:blur(20px)}
+.nav{height:72px;display:flex;align-items:center;gap:26px}.logo{font-weight:900;letter-spacing:-1px;font-size:22px}.logo span{color:#7d8cff}.navlinks{display:flex;gap:20px;margin-left:auto}.navlinks a{color:#aeb5c7;text-decoration:none;font-size:14px}.navlinks a:hover{color:white}.btn{border:0;border-radius:14px;padding:11px 17px;font-weight:700;color:white;background:linear-gradient(135deg,#6475ff,#9b5cff);cursor:pointer;box-shadow:0 8px 25px #6475ff25}
+.hero{padding:76px 0 45px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}.eyebrow{color:#8d9aff;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:2px}.hero h1{font-size:clamp(42px,6vw,76px);line-height:.98;letter-spacing:-4px;margin:16px 0}.hero p{font-size:18px;line-height:1.6;color:#aab1c1;max-width:650px}.hero-card{min-height:300px;border-radius:30px;padding:28px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(145deg,#ffffff12,#ffffff04),radial-gradient(circle at 80% 15%,#8a78ff55,transparent 35%)}
+.hero-card .tag{color:#b8c0ff}.hero-card h2{font-size:30px;margin:12px 0 5px}.meta{color:#858da0;font-size:13px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:30px 0 18px}.section-head h2{font-size:25px;margin:0}.categories{display:flex;gap:10px;overflow:auto;padding-bottom:5px}.chip{white-space:nowrap;padding:9px 14px;border-radius:999px;border:1px solid #ffffff12;background:#ffffff08;color:#b9c0cf;cursor:pointer}.chip.active,.chip:hover{background:#ffffff16;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding-bottom:70px}.card{border-radius:22px;overflow:hidden;transition:.25s transform,.25s border-color}.card:hover{transform:translateY(-5px);border-color:#ffffff28}.cover{height:170px;background:linear-gradient(135deg,#22283b,#11131c);position:relative}.cover:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 30%,#8d9aff55,transparent 35%)}.cardbody{padding:20px}.tag{font-size:12px;color:#9ba6ff;font-weight:800}.card h3{font-size:20px;line-height:1.25;margin:9px 0}.card p{color:#9da5b6;line-height:1.5;font-size:14px;margin:0 0 16px}.footer{border-top:1px solid #ffffff10;padding:28px 0;color:#71798a;font-size:13px}
+@media(max-width:800px){.hero{grid-template-columns:1fr;padding-top:45px}.grid{grid-template-columns:1fr}.navlinks{display:none}.hero h1{letter-spacing:-2px}.hero-card{min-height:250px}}
+</style>
+</head>
+<body>
+<header><div class="container nav"><div class="logo">ARTICLES<span>.</span></div><nav class="navlinks"><a href="#">Главная</a><a href="#latest">Статьи</a><a href="#categories">Категории</a></nav><button class="btn" onclick="alert('Раздел публикации добавим следующим шагом')">Написать статью</button></div></header>
+<main class="container">
+<section class="hero">
+<div><div class="eyebrow">Платформа статей · 2026</div><h1>Идеи, которые<br>стоит прочитать.</h1><p>Современное пространство для авторов и читателей. Публикуйте свои мысли, находите интересные материалы и обсуждайте идеи.</p><button class="btn" onclick="document.querySelector('#latest').scrollIntoView()">Читать статьи →</button></div>
+<div class="glass hero-card"><div class="tag">⭐ Рекомендуем</div><h2>Что изменит интернет в 2026 году?</h2><div class="meta">Редакция · 5 мин чтения</div></div>
+</section>
+<section id="categories"><div class="section-head"><h2>Категории</h2></div><div class="categories"><div class="chip active">Все</div><div class="chip">Технологии</div><div class="chip">Наука</div><div class="chip">Игры</div><div class="chip">Культура</div><div class="chip">Общество</div></div></section>
+<section id="latest"><div class="section-head"><h2>Свежие статьи</h2><span class="meta">Сегодня</span></div><div class="grid">
+<article class="glass card"><div class="cover"></div><div class="cardbody"><div class="tag">Технологии</div><h3>Искусственный интеллект в повседневной жизни</h3><p>Как современные AI-инструменты меняют работу, обучение и творчество.</p><div class="meta">Сегодня · 6 мин</div></div></article>
+<article class="glass card"><div class="cover"></div><div class="cardbody"><div class="tag">Наука</div><h3>Каким станет транспорт будущего</h3><p>Электрический транспорт, автономные системы и новые городские решения.</p><div class="meta">Сегодня · 8 мин</div></div></article>
+<article class="glass card"><div class="cover"></div><div class="cardbody"><div class="tag">Культура</div><h3>Почему короткие форматы не исчезают</h3><p>Разбираемся, как меняется способ потребления информации в 2026 году.</p><div class="meta">Вчера · 4 мин</div></div></article>
+</div></section>
+</main>
+<footer class="footer"><div class="container">© 2026 ARTICLES — платформа статей</div></footer>
+</body></html>
