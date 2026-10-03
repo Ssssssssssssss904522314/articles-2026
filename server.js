@@ -65,4 +65,4 @@ app.post("/register/finish",(req,res)=>{
   users.set(user.id,user); sessions.delete(token);
   res.send("<h1>Регистрация завершена!</h1><p>Добро пожаловать, @"+user.nickname+"</p><a href="/">На главную</a>");
 });
-\napp.listen(PORT,()=>console.log("ARTICLES server listening on "+PORT));
+\napp.listen(PORT,async()=>{console.log("ARTICLES server listening on "+PORT);if(BOT_TOKEN&&process.env.PUBLIC_URL){try{await fetch("https://api.telegram.org/bot"+BOT_TOKEN+"/setWebhook",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:process.env.PUBLIC_URL+"/api/telegram/webhook"})});console.log("Telegram webhook configured");}catch(e){console.error("Webhook setup failed",e.message)}}});
