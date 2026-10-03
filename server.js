@@ -6,26 +6,30 @@ app.use(express.static("."));
 const PORT=process.env.PORT||3000;
 const BOT_TOKEN=process.env.TELEGRAM_BOT_TOKEN||"";
 const BOT_USERNAME=process.env.TELEGRAM_BOT_USERNAME||"";
+const PUBLIC_URL=(process.env.PUBLIC_URL||"").replace(/\/$/,"");
 const sessions=new Map();
 const users=new Map();
-const standaloneCodes=new Map();
+
+function confirmationPage(){
+  return `<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Аккаунт подтверждён — ARTICLES</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at top,#1b2040 0,#08090d 48%,#05060a 100%);color:#fff;font-family:Inter,system-ui,-apple-system,sans-serif}.card{width:min(520px,100%);padding:44px 34px;text-align:center;border:1px solid #ffffff18;border-radius:30px;background:#ffffff0b;backdrop-filter:blur(20px);box-shadow:0 25px 80px #0008}.icon{width:78px;height:78px;margin:0 auto 22px;border-radius:24px;display:grid;place-items:center;background:#6475ff;color:#fff;font-size:38px;font-weight:900}.muted{color:#aeb5c7;line-height:1.6}.btn{display:inline-block;margin-top:18px;padding:13px 22px;border-radius:14px;background:#6475ff;color:#fff;text-decoration:none;font-weight:800}</style></head><body><main class="card"><div class="icon">✓</div><h1>Ваш аккаунт подтверждён</h1><p class="muted">Telegram успешно подтверждён.<br>Теперь можно вернуться на сайт ARTICLES 2026.</p><a class="btn" href="/">Перейти на сайт</a></main></body></html>`;
+}
 
 app.post("/api/auth/start",(req,res)=>{
   if(!BOT_TOKEN||!BOT_USERNAME) return res.status(500).json({error:"Telegram bot is not configured on the server."});
   const token=crypto.randomBytes(18).toString("hex");
-  sessions.set(token,{created:Date.now(),chatId:null,code:null,verified:false});
+  sessions.set(token,{created:Date.now(),chatId:null,verified:false});
   res.json({token,botUrl:"https://t.me/"+BOT_USERNAME+"?start="+token});
 });
 
 app.post("/api/auth/verify",(req,res)=>{
-  const {token,name,nickname,code}=req.body||{};
+  const {token,name,nickname}=req.body||{};
   const s=sessions.get(token);
   if(!s||Date.now()-s.created>10*60*1000) return res.status(400).json({error:"Сессия регистрации истекла. Начни заново."});
-  if(!s.verified||String(code)!==String(s.code)) return res.status(400).json({error:"Неверный код из Telegram."});
+  if(!s.verified) return res.status(400).json({error:"Сначала подтверди аккаунт через Telegram."});
   const cleanNick=String(nickname||"").trim().replace(/^@/,"");
   if(!/^[A-Za-z0-9_]{3,24}$/.test(cleanNick)) return res.status(400).json({error:"Псевдоним: 3–24 символа, только латиница, цифры и _."});
   if([...users.values()].some(u=>u.nickname.toLowerCase()===cleanNick.toLowerCase())) return res.status(400).json({error:"Этот псевдоним уже занят."});
-  const user={id:crypto.randomUUID(),name:String(name).trim(),nickname:cleanNick,telegramChatId:s.chatId,createdAt:new Date().toISOString()};
+  const user={id:crypto.randomUUID(),name:String(name||"").trim(),nickname:cleanNick,telegramChatId:s.chatId,createdAt:new Date().toISOString()};
   users.set(user.id,user);
   sessions.delete(token);
   res.json({ok:true,user:{id:user.id,name:user.name,nickname:"@"+user.nickname}});
@@ -39,47 +43,56 @@ app.post("/api/telegram/webhook",(req,res)=>{
 
   const chatId=msg.chat.id;
   const token=text.split(" ")[1]||"";
-  const code=String(crypto.randomInt(100000,1000000));
-  const s=sessions.get(token);
+  let sessionToken=token;
 
-  if(s){
+  if(token&&sessions.has(token)){
+    const s=sessions.get(token);
     s.chatId=chatId;
-    s.code=code;
     s.verified=true;
-    sendTelegramCode(chatId,code,"Ваш код регистрации ARTICLES");
   }else{
-    standaloneCodes.set(String(chatId),{code,created:Date.now()});
-    sendTelegramCode(chatId,code,"Ваш код ARTICLES");
+    sessionToken=crypto.randomBytes(18).toString("hex");
   }
 
-  res.sendStatus(200);
-});
-
-function sendTelegramCode(chatId,code,title){
+  const url=PUBLIC_URL+"/verified?token="+encodeURIComponent(sessionToken);
   fetch("https://api.telegram.org/bot"+BOT_TOKEN+"/sendMessage",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       chat_id:chatId,
-      text:title+": "+code+"\n\nНикому его не сообщайте."
+      text:"Ваш аккаунт подтверждён. Нажмите кнопку ниже, чтобы открыть страницу подтверждения.",
+      reply_markup:{inline_keyboard:[[{text:"✓ Открыть страницу подтверждения",url:url}]]}
     })
   }).catch(()=>{});
-}
+
+  res.sendStatus(200);
+});
+
+app.get("/verified",(req,res)=>{
+  const token=String(req.query.token||"");
+  const s=sessions.get(token);
+  if(s){
+    if(Date.now()-s.created>10*60*1000) return res.status(400).send("Сессия подтверждения истекла. Вернись на сайт и начни заново.");
+    s.verified=true;
+  }
+  res.send(confirmationPage());
+});
 
 app.get("/health",(req,res)=>res.json({ok:true}));
 
 app.get("/register",(req,res)=>{
   if(!BOT_USERNAME) return res.status(500).send("Telegram bot is not configured.");
   const token=crypto.randomBytes(18).toString("hex");
-  sessions.set(token,{created:Date.now(),chatId:null,code:null,verified:false});
-  const html=`<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Регистрация — ARTICLES</title><style>body{margin:0;background:#08090d;color:#fff;font-family:system-ui;min-height:100vh;display:grid;place-items:center;padding:20px}.box{width:min(460px,100%);padding:30px;border:1px solid #ffffff14;border-radius:28px;background:#ffffff0b}.field{margin:16px 0}.field label{display:block;color:#aeb5c7;font-size:13px;margin-bottom:7px}.field input{width:100%;padding:13px;border-radius:13px;border:1px solid #ffffff16;background:#ffffff08;color:#fff;box-sizing:border-box}.btn{display:inline-block;border:0;border-radius:14px;padding:12px 18px;font-weight:700;color:#fff;background:#6475ff;cursor:pointer;text-decoration:none}</style></head><body><main class="box"><h1>Регистрация</h1><p>1. Открой Telegram-бота и нажми START. 2. Бот пришлёт одноразовый код. 3. Введи его здесь.</p><a class="btn" href="https://t.me/${BOT_USERNAME}?start=${token}" target="_blank">Открыть Telegram-бота</a><form method="POST" action="/register/finish"><input type="hidden" name="token" value="${token}"><div class="field"><label>Имя</label><input name="name" maxlength="50" required></div><div class="field"><label>Псевдоним</label><input name="nickname" maxlength="24" placeholder="@psevdonim" required></div><div class="field"><label>Код из Telegram</label><input name="code" maxlength="6" inputmode="numeric" required></div><button class="btn" type="submit">Зарегистрироваться</button></form></main></body></html>`;
+  sessions.set(token,{created:Date.now(),chatId:null,verified:false});
+  const html=`<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Регистрация — ARTICLES</title><style>*{box-sizing:border-box}body{margin:0;background:#08090d;color:#fff;font-family:system-ui;min-height:100vh;display:grid;place-items:center;padding:20px}.box{width:min(460px,100%);padding:30px;border:1px solid #ffffff14;border-radius:28px;background:#ffffff0b}.field{margin:16px 0}.field label{display:block;color:#aeb5c7;font-size:13px;margin-bottom:7px}.field input{width:100%;padding:13px;border-radius:13px;border:1px solid #ffffff16;background:#ffffff08;color:#fff;box-sizing:border-box}.btn{display:inline-block;border:0;border-radius:14px;padding:12px 18px;font-weight:700;color:#fff;background:#6475ff;cursor:pointer;text-decoration:none}</style></head><body><main class="box"><h1>Регистрация</h1><p>1. Открой Telegram-бота и подтверди аккаунт. 2. Нажми кнопку подтверждения в Telegram. 3. Заполни имя и псевдоним здесь.</p><a class="btn" href="https://t.me/${BOT_USERNAME}?start=${token}" target="_blank">Открыть Telegram-бота</a><form method="POST" action="/register/finish"><input type="hidden" name="token" value="${token}"><div class="field"><label>Имя</label><input name="name" maxlength="50" required></div><div class="field"><label>Псевдоним</label><input name="nickname" maxlength="24" placeholder="@psevdonim" required></div><button class="btn" type="submit">Зарегистрироваться</button></form></main></body></html>`;
   res.send(html);
 });
+
 app.use(express.urlencoded({extended:false}));
 app.post("/register/finish",(req,res)=>{
-  const {token,name,nickname,code}=req.body||{}; const s=sessions.get(token);
+  const {token,name,nickname}=req.body||{};
+  const s=sessions.get(token);
   if(!s||Date.now()-s.created>10*60*1000) return res.status(400).send("Сессия регистрации истекла. Вернись назад и начни заново.");
-  if(!s.verified||String(code)!==String(s.code)) return res.status(400).send("Неверный код из Telegram. Вернись назад.");
+  if(!s.verified) return res.status(400).send("Сначала подтверди аккаунт через Telegram.");
   const cleanNick=String(nickname||"").trim().replace(/^@/,"");
   if(!/^[A-Za-z0-9_]{3,24}$/.test(cleanNick)) return res.status(400).send("Неверный псевдоним.");
   if([...users.values()].some(u=>u.nickname.toLowerCase()===cleanNick.toLowerCase())) return res.status(400).send("Этот псевдоним уже занят.");
@@ -92,12 +105,12 @@ app.post("/register/finish",(req,res)=>{
 
 app.listen(PORT,async()=>{
   console.log("ARTICLES server listening on "+PORT);
-  if(BOT_TOKEN&&process.env.PUBLIC_URL){
+  if(BOT_TOKEN&&PUBLIC_URL){
     try{
       await fetch("https://api.telegram.org/bot"+BOT_TOKEN+"/setWebhook",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({url:process.env.PUBLIC_URL+"/api/telegram/webhook"})
+        body:JSON.stringify({url:PUBLIC_URL+"/api/telegram/webhook"})
       });
       console.log("Telegram webhook configured");
     }catch(e){console.error("Webhook setup failed",e.message)}
